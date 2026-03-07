@@ -9,7 +9,7 @@ class Base(DeclarativeBase):
 engine = create_async_engine(
     get_settings().database_url,
     echo=False,
-    pool_suze=5,
+    pool_size=5,
     max_overflow=10,
 )
 
