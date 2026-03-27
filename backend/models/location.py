@@ -58,5 +58,5 @@ class Location(Base):
 
     # Indexes
     __table_args__ = (
-        Index("idx_locations_slug", "slug", postgresql_where(deleted_at.is_(None)))
+        Index("idx_locations_slug", "slug", postgresql_where=(deleted_at.is_(None))),
     )
