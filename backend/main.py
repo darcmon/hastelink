@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from backend.db.session import Base, engine, async_session_factory
 from backend.dependencies import hash_password
+from backend.routers.auth import router as auth_router
 from backend.config import get_settings
 from backend.models import AdminUser
 
@@ -54,6 +55,8 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health_check():
         return {"status": "ok"}
+    
+    app.include_router(auth_router)
     
     return app
 
