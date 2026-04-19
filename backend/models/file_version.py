@@ -38,8 +38,8 @@ class FileVersion(Base):
 
     uploaded_by: Mapped[str] = mapped_column(String(255), nullable=False)
     uploaded_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=datetime.utcnow)
-    reviewed_by: Mapped[str | None] = mapped_column(String(255), nullable=False)
-    reviewed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
+    reviewed_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     review_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     deleted_at: Mapped[datetime | None] = mapped_column(

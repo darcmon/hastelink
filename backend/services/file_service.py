@@ -36,7 +36,7 @@ class FileService:
         """Upload file bytes to S3."""
         async with self.session.client("s3", **self._client_kwargs()) as s3:
             await s3.put_object(
-                Bucket=self.settings.s3_object,
+                Bucket=self.settings.s3_bucket,
                 Key=s3_key,
                 Body=file_data,
                 ContentType=content_type,
