@@ -8,17 +8,19 @@ from backend.dependencies import hash_password
 from backend.routers.auth import router as auth_router
 from backend.routers.locations import router as locations_router
 from backend.routers.upload import router as upload_router
+from backend.routers.approval import router as approval_router
 from backend.config import get_settings
 from backend.models import AdminUser
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Runs once at startup and once at shutdown.
-    
+
     The code BEFORE `yield` runs at startup.
     The code AFTER `yield` runs at shutdown.
     """
@@ -32,12 +34,13 @@ async def lifespan(app: FastAPI):
     # Seed an admin user if none exists
     async with async_session_factory() as db:
         from sqlalchemy import select
+
         result = await db.execute(select(AdminUser).limit(1))
         if not result.scalar_one_or_none():
             admin = AdminUser(
                 email=settings.admin_email,
                 password_hash=hash_password(settings.admin_password),
-                display_name="Admin"
+                display_name="Admin",
             )
             db.add(admin)
             await db.commit()
@@ -47,21 +50,20 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
     logger.info("Shut down")
 
+
 def create_app() -> FastAPI:
-    app = FastAPI(
-        title="klinkrr",
-        version="0.1.0",
-        lifespan=lifespan
-    )
+    app = FastAPI(title="klinkrr", version="0.1.0", lifespan=lifespan)
 
     @app.get("/health")
     async def health_check():
         return {"status": "ok"}
-    
+
     app.include_router(auth_router)
     app.include_router(locations_router)
     app.include_router(upload_router)
-    
+    app.include_router(approval_router)
+
     return app
+
 
 app = create_app()

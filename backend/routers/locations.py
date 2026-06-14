@@ -24,9 +24,7 @@ async def list_locations(
     admin: AdminUser = Depends(get_current_admin),
 ):
     result = await db.execute(
-        select(Location)
-        .where(Location.deleted_at.is_(None))
-        .order_by(Location.slug)
+        select(Location).where(Location.deleted_at.is_(None)).order_by(Location.slug)
     )
     locations = result.scalars().all()
     count_result = await db.execute(
@@ -43,9 +41,7 @@ async def create_location(
     admin: AdminUser = Depends(get_current_admin),
 ):
     # Check slug uniqueness
-    existing = await db.execute(
-        select(Location).where(Location.slug == body.slug)
-    )
+    existing = await db.execute(select(Location).where(Location.slug == body.slug))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Slug already exists")
 

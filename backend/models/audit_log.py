@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, JSONB, INET
 
 from backend.db.session import Base
 
+
 class AuditLog(Base):
     __tablename__ = "audit_logs"
 
@@ -15,9 +16,9 @@ class AuditLog(Base):
     )
 
     action: Mapped[str] = mapped_column(String(50), nullable=False)
-    
+
     entity_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    
+
     entity_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
 
     actor: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -34,6 +35,8 @@ class AuditLog(Base):
 
     __table_args__ = (
         Index("idx_audit_logs_entity", "entity_type", "entity_id"),
-        Index("idx_audit_logs_created", "created_at",)
+        Index(
+            "idx_audit_logs_created",
+            "created_at",
+        ),
     )
-

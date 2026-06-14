@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
+
 class Settings(BaseSettings):
     """
     All app config lives here.
@@ -9,7 +10,9 @@ class Settings(BaseSettings):
     """
 
     # db
-    database_url: str = "postgresql+asyncpg://hastelink:localdev@localhost:5432/haste_link"
+    database_url: str = (
+        "postgresql+asyncpg://hastelink:localdev@localhost:5432/haste_link"
+    )
 
     # S3 / MinIO
     s3_endpoint_url: str | None = None
@@ -20,7 +23,7 @@ class Settings(BaseSettings):
 
     # auth
     secret_key: str = "changemelater"
-    access_token_expire_minutes: int = 480 # 8hrs
+    access_token_expire_minutes: int = 480  # 8hrs
 
     # CORS
     allowed_origins: str = "http://localhost:5173"
@@ -51,7 +54,8 @@ class Settings(BaseSettings):
     @property
     def max_upload_size_bytes(self) -> int:
         return self.max_upload_size_mb * 1024 * 1024
-    
+
+
 @lru_cache
 def get_settings() -> Settings:
     """

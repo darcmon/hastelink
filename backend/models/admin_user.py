@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 
 from backend.db.session import Base
 
+
 class AdminUser(Base):
     __tablename__ = "admin_users"
 
@@ -29,4 +30,3 @@ class AdminUser(Base):
     last_login_at: Mapped[datetime | None] = mapped_column(
         TIMESTAMP(timezone=True), nullable=True
     )
-    

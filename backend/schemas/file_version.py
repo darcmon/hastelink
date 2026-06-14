@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class FileVersionResponse(BaseModel):
     """Full version details for archive views."""
+
     id: uuid.UUID
     location_id: uuid.UUID
     original_filename: str
@@ -23,6 +24,7 @@ class FileVersionResponse(BaseModel):
 
 class FileVersionUploadResponse(BaseModel):
     """Returned after a successful upload."""
+
     id: uuid.UUID
     location_slug: str
     original_filename: str
@@ -33,11 +35,13 @@ class FileVersionUploadResponse(BaseModel):
 
 class ApprovalRequest(BaseModel):
     """Optional notes when approving/rejecting."""
+
     notes: str | None = None
 
 
 class ApprovalResponse(BaseModel):
     """Returned after approve/reject."""
+
     id: uuid.UUID
     status: str
     reviewed_by: str
@@ -48,6 +52,7 @@ class ApprovalResponse(BaseModel):
 
 class PendingVersionResponse(BaseModel):
     """A pending version shown in the dashboard."""
+
     id: uuid.UUID
     location_slug: str
     location_display_name: str
@@ -61,6 +66,7 @@ class PendingVersionResponse(BaseModel):
 
 class VersionArchiveResponse(BaseModel):
     """Paginated list of versions for a location."""
+
     location_slug: str
     location_display_name: str
     versions: list[FileVersionResponse]

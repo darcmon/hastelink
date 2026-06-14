@@ -13,11 +13,14 @@ from backend.models.admin_user import AdminUser
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
+
 
 ALGORITHM = "HS256"
 
@@ -35,6 +38,8 @@ security = HTTPBearer()
         async def my_route(admin: AdminUser = Depends(get_current_admin)):
             # `admin` is the logged-in user
 """
+
+
 def create_access_token(data: dict) -> str:
     settings = get_settings()
     to_encode = data.copy()
@@ -44,9 +49,10 @@ def create_access_token(data: dict) -> str:
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.secret_key, algorithm=ALGORITHM)
 
+
 async def get_current_admin(
-        credentials: HTTPAuthorizationCredentials = Depends(security),
-        db: AsyncSession = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db),
 ) -> AdminUser:
     token = credentials.credentials
     settings = get_settings()
@@ -65,7 +71,7 @@ async def get_current_admin(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
         )
-    
+
     # Step 2: Look up the user in the db
     result = await db.execute(
         select(AdminUser).where(
@@ -78,7 +84,7 @@ async def get_current_admin(
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found or inactive"
+            detail="User not found or inactive",
         )
 
     return user

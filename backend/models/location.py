@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 
 from backend.db.session import Base
 
+
 class Location(Base):
     __tablename__ = "locations"
 

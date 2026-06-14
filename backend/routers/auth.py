@@ -11,6 +11,7 @@ from backend.schemas.auth import LoginRequest, TokenResponse, AdminUserResponse
 
 router = APIRouter(prefix="/admin", tags=["auth"])
 
+
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
@@ -26,12 +27,13 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
-    
+
     user.last_login_at = datetime.now(timezone.utc)
     await db.flush()
 
     token = create_access_token({"sub": user.email})
     return TokenResponse(access_token=token)
+
 
 @router.get("/me", response_model=AdminUserResponse)
 async def get_me(admin: AdminUser = Depends(get_current_admin)):
