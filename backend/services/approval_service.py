@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.models.location import Location
 from backend.models.file_version import FileVersion
 
+from backend.services.cache_service import cache_service
+
 
 class ApprovalService:
     async def approve_version(
@@ -49,6 +51,7 @@ class ApprovalService:
         location.updated_at = now
 
         await db.flush()
+        cache_service.invalidate(location.slug)
         return version, location
 
     async def reject_version(
