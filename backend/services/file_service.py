@@ -50,13 +50,13 @@ class FileService:
                 Bucket=self.settings.s3_bucket,
                 Key=s3_key,
             )
-            async with response["Body"] as stream:
-                while chunk := await stream.read(64 * 1024):
-                    yield chunk
+            body = response["Body"]
+            async for chunk in body.iter_chunks(64 * 1024):
+                yield chunk
 
     async def delete_file(self, s3_key: str) -> None:
         """Delete a file from S3 (for hard cleanup if ever needed)."""
-        async with self.session.clinet("s3", **self._client_kwargs()) as s3:
+        async with self.session.client("s3", **self._client_kwargs()) as s3:
             await s3.delete_object(
                 Bucket=self.settings.s3_bucket,
                 Key=s3_key,

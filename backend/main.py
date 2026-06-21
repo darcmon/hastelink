@@ -6,9 +6,10 @@ from fastapi import FastAPI
 from backend.db.session import Base, engine, async_session_factory
 from backend.dependencies import hash_password
 from backend.routers.auth import router as auth_router
-from backend.routers.locations import router as locations_router
-from backend.routers.upload import router as upload_router
 from backend.routers.approval import router as approval_router
+from backend.routers.locations import router as locations_router
+from backend.routers.public import router as public_router
+from backend.routers.upload import router as upload_router
 from backend.config import get_settings
 from backend.models import AdminUser
 
@@ -62,6 +63,7 @@ def create_app() -> FastAPI:
     app.include_router(locations_router)
     app.include_router(upload_router)
     app.include_router(approval_router)
+    app.include_router(public_router)
 
     return app
 
