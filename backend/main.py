@@ -8,6 +8,7 @@ from backend.dependencies import hash_password
 from backend.routers.auth import router as auth_router
 from backend.routers.approval import router as approval_router
 from backend.routers.locations import router as locations_router
+from backend.routers.archive import router as archive_router
 from backend.routers.public import router as public_router
 from backend.routers.upload import router as upload_router
 from backend.config import get_settings
@@ -60,9 +61,12 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     app.include_router(auth_router)
-    app.include_router(locations_router)
     app.include_router(upload_router)
+    app.include_router(locations_router)
     app.include_router(approval_router)
+    app.include_router(archive_router)
+
+    # Public routes (MUST be last — /{slug} catches everything)
     app.include_router(public_router)
 
     return app

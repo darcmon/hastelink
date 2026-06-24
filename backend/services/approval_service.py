@@ -119,5 +119,63 @@ class ApprovalService:
         await db.flush()
         return version
 
+    async def get_versions_for_location(
+        self,
+        db: AsyncSession,
+        location_id: UUID,
+        status: str | None = None,
+        page: int = 1,
+        per_page: int = 20,
+    ) -> tuple[list[FileVersion], int]:
+        """
+        Returns (versions, total_count) for pagination.
+
+        The query is built in two parts:
+        1. A count query to get the total matching rows
+        2. A data query to get just the current page
+
+        Both share the same WHERE clause so the count matches the data.
+        """
+
+        # Base conditions shared by both queries
+        base_conditions = [
+            FileVersion.location_id == location_id,
+            FileVersion.deleted_at.is_(None),
+        ]
+
+        if status:
+            base_conditions.append(FileVersion.status == status)
+
+        # Count query
+        count_query = select(func.count(FileVersion.id)).where(*base_conditions)
+        total = (await db.execute(count_query)).scalar()
+
+        # Data query
+        data_query = (
+            select(FileVersion)
+            .where(*base_conditions)
+            .order_by(FileVersion.uploaded_at.desc())
+            .offset((page - 1) * per_page)
+            .limit(per_page)
+        )
+        versions = (await db.execute(data_query)).scalars().all()
+
+        return versions, total
+
+    async def soft_delete_version(
+        self,
+        db: AsyncSession,
+        version_id: UUID,
+    ) -> FileVersion:
+        version = await db.get(FileVersion, version_id)
+        if not version:
+            raise ValueError("Version not found")
+        if version.status == "approved":
+            raise ValueError("Cannot delete an approved version")
+
+        version.deleted_at = datetime.now(timezone.utc)
+        await db.flush()
+        return version
+
 
 approval_service = ApprovalService()
