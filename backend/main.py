@@ -2,6 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from backend.db.session import Base, engine, async_session_factory
 from backend.dependencies import hash_password
@@ -12,6 +13,7 @@ from backend.routers.archive import router as archive_router
 from backend.routers.public import router as public_router
 from backend.routers.upload import router as upload_router
 from backend.config import get_settings
+from backend.middleware.security import SecurityHeaderMiddleware
 from backend.models import AdminUser
 
 logging.basicConfig(level=logging.INFO)
@@ -54,11 +56,21 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
+    settings = get_settings()
     app = FastAPI(title="klinkrr", version="0.1.0", lifespan=lifespan)
 
     @app.get("/health")
     async def health_check():
         return {"status": "ok"}
+
+    app.add_middleware(SecurityHeaderMiddleware)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.allowed_origins_list,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     app.include_router(auth_router)
     app.include_router(upload_router)
