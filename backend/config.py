@@ -32,6 +32,15 @@ class Settings(BaseSettings):
     admin_email: str = ""
     admin_password: str = ""
 
+    # OAuth
+    microsoft_client_id: str = ""
+    microsoft_client_secret: str = ""
+    microsoft_tenant: str = "common"
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_self_serve_enabled: bool = False  # the future flip-switch
+    frontend_url: str = "http://localhost:5173"
+
     # upload limits
     max_upload_size_mb: int = 50
     allowed_file_types: str = "application/pdf, image/png, image/jpeg"

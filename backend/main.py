@@ -1,5 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
+from starlette.middleware.sessions import SessionMiddleware
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.db.session import Base, engine, async_session_factory
 from backend.dependencies import hash_password
 from backend.routers.auth import router as auth_router
+from backend.routers.oauth import router as oauth_router
 from backend.routers.approval import router as approval_router
 from backend.routers.locations import router as locations_router
 from backend.routers.archive import router as archive_router
@@ -63,6 +65,7 @@ def create_app() -> FastAPI:
     async def health_check():
         return {"status": "ok"}
 
+    app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
     app.add_middleware(SecurityHeaderMiddleware)
     app.add_middleware(
         CORSMiddleware,
@@ -73,6 +76,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(auth_router)
+    app.include_router(oauth_router)
     app.include_router(upload_router)
     app.include_router(locations_router)
     app.include_router(approval_router)

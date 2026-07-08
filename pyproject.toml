@@ -13,4 +13,7 @@ dependencies = [
     "python-multipart>=0.0.6",    # Handle file uploads
     "bcrypt==4.0.1",              # Password hashing
     "python-jose[cryptography]>=3.3.0",  # JWT tokens
+    "authlib>=1.3.0",             # OAuth2 client and server
+    "itsdangerous>=2.1.0",        # Token generation and verification
+    "httpx>=0.27.0",              # Async HTTP client (for making requests to other services)
 ]

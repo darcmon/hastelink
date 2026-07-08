@@ -1,12 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
+from backend.db.base import Base
 
 from backend.config import get_settings
-
-
-class Base(DeclarativeBase):
-    pass
-
 
 engine = create_async_engine(
     get_settings().database_url,
@@ -21,13 +16,12 @@ async_session_factory = async_sessionmaker(
     expire_on_commit=False,
 )
 
-"""
-    The `yield` makes this a generator — FastAPI calls it, gets the session,
-    runs your route, then comes back here for cleanup (commit or rollback).
-"""
-
 
 async def get_db() -> AsyncSession:
+    """
+    The `yield` makes this a generator — FastAPI calls it, gets the session,
+    runs your route, then comes back here for cleanup (commit or rollback).
+    """
     async with async_session_factory() as session:
         try:
             yield session
