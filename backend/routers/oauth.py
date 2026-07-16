@@ -20,8 +20,11 @@ oauth.register(
     name="microsoft",
     client_id=settings.microsoft_client_id,
     client_secret=settings.microsoft_client_secret,
-    server_metadata_url=f"https://login.microsoftonline.com/{settings.microsoft_tenant}/v2.0/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid email profile"},
+    server_metadata_url="https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
+    client_kwargs={
+        "scope": "openid email profile",
+        "token_endpoint_auth_method": "client_secret_post",
+    },
 )
 
 oauth.register(
@@ -86,7 +89,10 @@ async def _find_or_onboard(
 
 async def _handle_callback(provider: str, request: Request, db: AsyncSession):
     client = oauth.create_client(provider)
-    token = await client.authorize_access_token(request)
+    token = await client.authorize_access_token(
+        request,
+        claims_options={"iss": {"essential": False}},
+    )
     info = token.get("userinfo")
 
     if not info or not info.get("email") or not info.get("sub"):
