@@ -146,7 +146,8 @@ async def reject_version(
 
     await audit_service.log(
         db=db,
-        version_id=version.id,
+        entity_id=version.id,
+        entity_type="file_version",
         actor=admin.email,
         action="reject",
         request=request,
