@@ -10,6 +10,9 @@ from backend.config import get_settings
 from backend.db.session import get_db
 from backend.dependencies import create_access_token
 from backend.models.admin_user import AdminUser
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin/auth", tags=["oauth"])
 settings = get_settings()
@@ -94,6 +97,7 @@ async def _handle_callback(provider: str, request: Request, db: AsyncSession):
         claims_options={"iss": {"essential": False}},
     )
     info = token.get("userinfo")
+    logger.info(f"[{provider}] Userinfo received: {info}")
 
     if not info or not info.get("email") or not info.get("sub"):
         return RedirectResponse(f"{settings.frontend_url}/login?error=provider")
