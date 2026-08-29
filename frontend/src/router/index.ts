@@ -6,6 +6,7 @@ import {
 import LoginView from '../views/LoginView.vue';
 import AuthCallbackView from '../views/AuthCallbackView.vue';
 import DashboardView from '../views/DashboardView.vue';
+import LocationsView from '../views/LocationsView.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -21,6 +22,7 @@ const routes: RouteRecordRaw[] = [
     meta: { public: true },
   },
   { path: '/dashboard', name: 'dashboard', component: DashboardView },
+  { path: '/locations', name: 'locations', component: LocationsView },
   { path: '/', redirect: '/dashboard' },
 ];
 
