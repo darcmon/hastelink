@@ -35,6 +35,31 @@ export default {
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined,
     }),
+  postForm: async (path: string, formData: FormData) => {
+    const token = localStorage.getItem('token');
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    // Deliberately NO Content-Type — the browser sets multipart boundary itself
+
+    const response = await fetch(`${API_URL}${path}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+      return;
+    }
+    if (!response.ok) {
+      const err = await response
+        .json()
+        .catch(() => ({ detail: 'Upload failed' }));
+      throw new Error(err.detail || response.statusText);
+    }
+    return response.json();
+  },
   patch: (path: string, body: unknown) =>
     request(path, { method: 'PATCH', body: JSON.stringify(body) }),
   del: (path: string) => request(path, { method: 'DELETE' }),

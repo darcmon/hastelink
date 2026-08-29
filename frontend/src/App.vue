@@ -7,6 +7,7 @@ const { isAuthenticated } = useAuth();
   <nav v-if="isAuthenticated">
     <router-link to="/dashboard">Dashboard</router-link>
     <router-link to="/locations">Locations</router-link>
+    <router-link to="/upload">Upload</router-link>
   </nav>
   <router-view />
 </template>
