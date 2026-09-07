@@ -23,6 +23,9 @@ Hastelink is a versioned file-publishing app for stable, human-readable links. A
 
 ## Local development
 
+Local development data is disposable. Database migrations, resets, and test setup
+may delete or recreate it. This policy does not apply to production data.
+
 ### Prerequisites
 
 - Python 3.11 or newer

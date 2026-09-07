@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "hastelink"
 version = "0.1.0"
@@ -13,7 +17,18 @@ dependencies = [
     "python-multipart>=0.0.6",    # Handle file uploads
     "bcrypt==4.0.1",              # Password hashing
     "python-jose[cryptography]>=3.3.0",  # JWT tokens
+    "passlib>=1.7.4",             # Password hashing helpers
+    "alembic>=1.13.0",            # Database schema migrations
     "authlib>=1.3.0",             # OAuth2 client and server
     "itsdangerous>=2.1.0",        # Token generation and verification
     "httpx>=0.27.0",              # Async HTTP client (for making requests to other services)
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["backend*"]

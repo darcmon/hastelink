@@ -48,6 +48,9 @@ class Settings(BaseSettings):
     # cache
     cache_ttl_seconds: int = 5
 
+    # external URL safety check
+    web_risk_api_key: str = ""
+
     # fwd to pydantic
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
