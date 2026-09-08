@@ -1,6 +1,22 @@
 import uuid
 from datetime import datetime
-from pydantic import BaseModel
+from typing import Literal
+
+from pydantic import BaseModel, field_validator
+
+from backend.services.url_validator import validate_link_url
+
+
+class LinkVersionCreate(BaseModel):
+    """Validated input for creating a redirect link version."""
+
+    link_url: str
+    link_mode: Literal["redirect"] = "redirect"
+
+    @field_validator("link_url")
+    @classmethod
+    def validate_url(cls, value: str) -> str:
+        return validate_link_url(value)
 
 
 class FileVersionResponse(BaseModel):
