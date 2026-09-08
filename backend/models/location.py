@@ -25,7 +25,7 @@ class Location(Base):
     # use_alter=True is needed because FileVersion also references Location (circular FK).
     current_approved_version_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("file_versions.id", use_alter=True),
+        ForeignKey("file_versions.id", use_alter=True, name="fk_locations_current_approved_version"),
         nullable=True,
     )
 

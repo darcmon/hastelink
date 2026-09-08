@@ -5,7 +5,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.db.session import Base, engine, async_session_factory
+from backend.db.session import engine, async_session_factory
 from backend.dependencies import hash_password
 from backend.routers.auth import router as auth_router
 from backend.routers.oauth import router as oauth_router
@@ -31,11 +31,6 @@ async def lifespan(app: FastAPI):
     The code AFTER `yield` runs at shutdown.
     """
     settings = get_settings()
-
-    # Create all database tables (replace with Alembic migrations later)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database tables ready")
 
     # Seed an admin user if none exists
     async with async_session_factory() as db:

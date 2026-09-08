@@ -7,5 +7,7 @@ dist/
 .history
 *.egg-info/
 secrets/
+.pytest_cache/
+.DS_Store
 
 *.pdf

@@ -71,11 +71,12 @@ Create a virtual environment and install the Python package:
 ```bash
 python3.11 -m venv .venv
 source .venv/bin/activate
-pip install -e .
-uvicorn backend.main:app --reload --port 8000
+python -m pip install -e '.[dev]'
+python -m alembic upgrade head
+python -m uvicorn backend.main:app --reload --port 8000
 ```
 
-The API is available at `http://localhost:8000`, with interactive docs at `http://localhost:8000/docs`. On startup, the backend creates missing tables and seeds the first admin user from `ADMIN_EMAIL` and `ADMIN_PASSWORD` when no admin exists.
+The API is available at `http://localhost:8000`, with interactive docs at `http://localhost:8000/docs`. Alembic owns schema creation and changes; run migrations before starting the backend. Startup only seeds the first admin user from `ADMIN_EMAIL` and `ADMIN_PASSWORD` when no admin exists.
 
 ### 4. Start the frontend
 

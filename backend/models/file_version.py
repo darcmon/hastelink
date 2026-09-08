@@ -30,10 +30,13 @@ class FileVersion(Base):
 
     # -- File metadata --
 
-    original_filename: Mapped[str] = mapped_column(String(500), nullable=False)
-    content_type: Mapped[str] = mapped_column(String(255), nullable=False)
-    file_size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    s3_key: Mapped[str] = mapped_column(String(1000), nullable=False)
+    kind: Mapped[str] = mapped_column(String(20), nullable=False, default="file", server_default="file")
+    link_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    link_mode: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    original_filename: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    content_type: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    file_size_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    s3_key: Mapped[str | None] = mapped_column(String(1000), nullable=True)
 
     # -- Approval workflow --
     # Status transitions: pending -> approved -> superseded
@@ -62,6 +65,17 @@ class FileVersion(Base):
     )
 
     __table_args__ = (
+        CheckConstraint("kind IN ('file', 'link')", name="ck_file_versions_kind"),
+        CheckConstraint(
+            "(kind = 'file' AND original_filename IS NOT NULL "
+            "AND content_type IS NOT NULL AND file_size_bytes IS NOT NULL "
+            "AND s3_key IS NOT NULL AND link_url IS NULL AND link_mode IS NULL) OR "
+            "(kind = 'link' AND original_filename IS NULL AND content_type IS NULL "
+            "AND file_size_bytes IS NULL AND s3_key IS NULL "
+            "AND link_url IS NOT NULL AND length(trim(link_url)) > 0 "
+            "AND link_mode IS NOT NULL AND link_mode = 'redirect')",
+            name="ck_file_versions_payload",
+        ),
         UniqueConstraint("location_id", "version_number"),
         CheckConstraint(
             "status IN ('pending', 'approved', 'rejected', 'superseded')",
