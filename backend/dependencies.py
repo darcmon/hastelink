@@ -1,4 +1,7 @@
 from datetime import datetime, timedelta, timezone
+from collections.abc import AsyncIterator
+
+import httpx
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -10,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.config import get_settings
 from backend.db.session import get_db
 from backend.models.admin_user import AdminUser
+from backend.services.web_risk_client import WebRiskClient
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -88,3 +92,17 @@ async def get_current_admin(
         )
 
     return user
+
+
+async def get_web_risk_client() -> AsyncIterator[WebRiskClient]:
+    settings = get_settings()
+    api_key = settings.web_risk_api_key.strip()
+
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="URL safety checking is unavailable",
+        )
+
+    async with httpx.AsyncClient() as http_client:
+        yield WebRiskClient(http_client, api_key=api_key)

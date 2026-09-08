@@ -19,6 +19,18 @@ class LinkVersionCreate(BaseModel):
         return validate_link_url(value)
 
 
+class LinkVersionCreateResponse(BaseModel):
+    """Returned after a link version is created for review."""
+
+    id: uuid.UUID
+    location_slug: str
+    link_url: str
+    link_mode: Literal["redirect"]
+    version_number: int
+    status: Literal["pending"]
+    uploaded_at: datetime
+
+
 class FileVersionResponse(BaseModel):
     """Full version details for archive views."""
 

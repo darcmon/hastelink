@@ -119,6 +119,29 @@ class ApprovalService:
         await db.flush()
         return version
 
+    async def create_pending_link_version(
+        self,
+        db: AsyncSession,
+        location_id: UUID,
+        link_url: str,
+        uploaded_by: str,
+    ) -> FileVersion:
+        version_number = await self.get_next_version_number(db, location_id)
+
+        version = FileVersion(
+            location_id=location_id,
+            kind="link",
+            link_url=link_url,
+            link_mode="redirect",
+            uploaded_by=uploaded_by,
+            version_number=version_number,
+            status="pending",
+        )
+
+        db.add(version)
+        await db.flush()
+        return version
+
     async def get_versions_for_location(
         self,
         db: AsyncSession,

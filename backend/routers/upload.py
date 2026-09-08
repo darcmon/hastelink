@@ -4,13 +4,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config import get_settings
 from backend.db.session import get_db
-from backend.dependencies import get_current_admin
+from backend.dependencies import get_current_admin, get_web_risk_client
 from backend.models.admin_user import AdminUser
 from backend.models.location import Location
-from backend.schemas.file_version import FileVersionUploadResponse
+from backend.schemas.file_version import (
+    FileVersionUploadResponse,
+    LinkVersionCreate,
+    LinkVersionCreateResponse,
+)
 from backend.services.file_service import file_service
 from backend.services.approval_service import approval_service
 from backend.services.audit_service import audit_service
+from backend.services.web_risk_client import WebRiskClient, WebRiskError
 
 router = APIRouter(prefix="/admin", tags=["upload"])
 
@@ -93,6 +98,72 @@ async def upload_file(
         id=version.id,
         location_slug=slug,
         original_filename=version.original_filename,
+        version_number=version.version_number,
+        status=version.status,
+        uploaded_at=version.uploaded_at,
+    )
+
+
+@router.post(
+    "/locations/{slug}/link",
+    response_model=LinkVersionCreateResponse,
+    status_code=201,
+)
+async def create_link(
+    slug: str,
+    payload: LinkVersionCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    admin: AdminUser = Depends(get_current_admin),
+    web_risk: WebRiskClient = Depends(get_web_risk_client),
+):
+    result = await db.execute(
+        select(Location).where(
+            Location.slug == slug,
+            Location.deleted_at.is_(None),
+        )
+    )
+    location = result.scalar_one_or_none()
+
+    if location is None:
+        raise HTTPException(status_code=404, detail="Location not found")
+
+    try:
+        flagged = await web_risk.is_flagged(payload.link_url)
+    except WebRiskError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="URL safety checking is unavailable",
+        ) from exc
+
+    if flagged:
+        raise HTTPException(
+            status_code=422,
+            detail="URL was flagged by the safety check",
+        )
+
+    version = await approval_service.create_pending_link_version(
+        db=db,
+        location_id=location.id,
+        link_url=payload.link_url,
+        uploaded_by=admin.email,
+    )
+
+    await audit_service.log(
+        db=db,
+        action="create_link",
+        entity_type="file_version",
+        entity_id=version.id,
+        actor=admin.email,
+        request=request,
+        details={"location_slug": slug, "link_mode": version.link_mode},
+    )
+
+    return LinkVersionCreateResponse(
+        id=version.id,
+        location_slug=slug,
+        link_url=version.link_url,
+        link_mode=version.link_mode,
         version_number=version.version_number,
         status=version.status,
         uploaded_at=version.uploaded_at,

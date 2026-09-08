@@ -32,3 +32,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 include = ["backend*"]
+exclude = ["backend.tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
