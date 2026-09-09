@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
-from fastapi.responses import StreamingResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,12 +33,19 @@ async def serve_file(
 
         # 2. Get the approved file version
         version = await db.get(FileVersion, location.current_approved_version_id)
-        if not version or version.deleted_at is not None:
-            raise HTTPException(status_code=404, detail="File not found")
+        if (
+            version is None
+            or version.deleted_at is not None
+            or version.status != "approved"
+        ):
+            raise HTTPException(status_code=404, detail="Version not found")
 
         # Populate cache for next request
         cache_service.set(
             slug=slug,
+            kind=version.kind,
+            link_url=version.link_url,
+            link_mode=version.link_mode,
             version_id=version.id,
             s3_key=version.s3_key,
             content_type=version.content_type,
@@ -54,6 +61,19 @@ async def serve_file(
         entity_id=cached.version_id,
         request=request,
     )
+
+    if cached.kind == "link":
+        if cached.link_mode != "redirect" or not cached.link_url:
+            raise HTTPException(
+                status_code=503,
+                detail="Link is unavailable",
+            )
+
+        return RedirectResponse(
+            url=cached.link_url,
+            status_code=302,
+            headers={"Cache-Control": "no-store"},
+        )
 
     # 4. Stream the file content
     return StreamingResponse(

@@ -61,6 +61,11 @@ async def download_version(
     if not version or version.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Version not found")
 
+    if version.kind == "link":
+        raise HTTPException(
+            status_code=400,
+            detail="Link versions do not have a downloadable file",
+        )
     return StreamingResponse(
         file_service.stream_file(version.s3_key),
         media_type=version.content_type,

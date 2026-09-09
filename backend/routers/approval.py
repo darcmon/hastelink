@@ -34,6 +34,9 @@ async def list_pending(
         results.append(
             PendingVersionResponse(
                 id=v.id,
+                kind=v.kind,
+                link_url=v.link_url,
+                link_mode=v.link_mode,
                 location_slug=location.slug,
                 location_display_name=location.display_name,
                 original_filename=v.original_filename,

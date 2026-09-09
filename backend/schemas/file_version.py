@@ -36,9 +36,12 @@ class FileVersionResponse(BaseModel):
 
     id: uuid.UUID
     location_id: uuid.UUID
-    original_filename: str
-    content_type: str
-    file_size_bytes: int
+    kind: Literal["file", "link"]
+    link_url: str | None
+    link_mode: Literal["redirect"] | None
+    original_filename: str | None
+    content_type: str | None
+    file_size_bytes: int | None
     status: str
     version_number: int
     uploaded_by: str
@@ -82,11 +85,14 @@ class PendingVersionResponse(BaseModel):
     """A pending version shown in the dashboard."""
 
     id: uuid.UUID
+    kind: Literal["file", "link"]
+    link_url: str | None
+    link_mode: Literal["redirect"] | None
     location_slug: str
     location_display_name: str
-    original_filename: str
-    content_type: str
-    file_size_bytes: int
+    original_filename: str | None
+    content_type: str | None
+    file_size_bytes: int | None
     version_number: int
     uploaded_by: str
     uploaded_at: datetime

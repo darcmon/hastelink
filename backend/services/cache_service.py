@@ -1,6 +1,7 @@
 import time
 import logging
 from dataclasses import dataclass
+from typing import Literal
 from uuid import UUID
 
 from backend.config import get_settings
@@ -10,13 +11,16 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CachedVersion:
-    """Everything the public route needs to serve a file, without hitting the DB."""
+    """Everything the public route needs to serve a file or redirect."""
 
     version_id: UUID
-    s3_key: str
-    content_type: str
-    original_filename: str
+    s3_key: str | None
+    content_type: str | None
+    original_filename: str | None
     cached_at: float
+    kind: Literal["file", "link"] = "file"
+    link_url: str | None = None
+    link_mode: Literal["redirect"] | None = None
 
 
 class CacheService:
@@ -36,9 +40,12 @@ class CacheService:
         self,
         slug: str,
         version_id: UUID,
-        s3_key: str,
-        content_type: str,
-        original_filename: str,
+        s3_key: str | None,
+        content_type: str | None,
+        original_filename: str | None,
+        kind: Literal["file", "link"] = "file",
+        link_url: str | None = None,
+        link_mode: Literal["redirect"] | None = None,
     ) -> None:
         self._cache[slug] = CachedVersion(
             version_id=version_id,
@@ -46,6 +53,9 @@ class CacheService:
             content_type=content_type,
             original_filename=original_filename,
             cached_at=time.monotonic(),
+            kind=kind,
+            link_url=link_url,
+            link_mode=link_mode,
         )
 
     def invalidate(self, slug: str) -> None:
