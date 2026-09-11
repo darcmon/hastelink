@@ -20,7 +20,31 @@ async function request(path: string, options: RequestInit = {}) {
     const err = await response.json().catch(() => ({
       detail: 'Request failed',
     }));
-    throw new Error(err.detail || response.statusText);
+    let message = response.statusText || 'Request failed';
+
+    if (typeof err.detail === 'string') {
+      message = err.detail;
+    } else if (Array.isArray(err.detail)) {
+      const messages = err.detail
+        .map((item: unknown) => {
+          if (
+            typeof item === 'object' &&
+            item !== null &&
+            'msg' in item &&
+            typeof item.msg === 'string'
+          ) {
+            return item.msg;
+          }
+          return '';
+        })
+        .filter((message: string) => message.length > 0);
+
+      if (messages.length > 0) {
+        message = messages.join('; ');
+      }
+    }
+
+    throw new Error(message);
   }
 
   // 204 No content has no body to parse

@@ -8,9 +8,12 @@ interface PendingVersion {
   id: string;
   location_slug: string;
   location_display_name: string;
-  original_filename: string;
-  content_type: string;
-  file_size_bytes: number;
+  kind: 'file' | 'link';
+  link_url: string | null;
+  link_mode: 'redirect' | null;
+  original_filename: string | null;
+  content_type: string | null;
+  file_size_bytes: number | null;
   version_number: number;
   uploaded_by: string;
   uploaded_at: string;
@@ -49,7 +52,7 @@ async function approve(id: string) {
 }
 
 async function reject(id: string) {
-  if (!confirm('Reject this upload?')) return;
+  if (!confirm('Reject this version?')) return;
   actioningId.value = id;
   try {
     await api.post(`/admin/versions/${id}/reject`);
@@ -84,18 +87,27 @@ onMounted(loadPending);
     <p v-if="loading">Loading…</p>
     <p v-else-if="error" class="error">{{ error }}</p>
     <p v-else-if="pending.length === 0">
-      No pending uploads. Everything's up to date.
+      No pending versions. Everything's up to date.
     </p>
 
     <ul v-else class="pending-list">
       <li v-for="v in pending" :key="v.id" class="pending-item">
         <div class="info">
-          <strong>{{ v.original_filename }}</strong>
+          <strong>
+            {{ v.kind === 'link' ? v.link_url : v.original_filename }}
+          </strong>
+
           <span class="meta">
-            {{ formatSize(v.file_size_bytes) }} · v{{ v.version_number }} ·
-            {{ v.location_display_name }} (/{{ v.location_slug }})
+            <template v-if="v.kind === 'link'"> Redirect link · </template>
+            <template v-else-if="v.file_size_bytes !== null">
+              {{ formatSize(v.file_size_bytes) }} ·
+            </template>
+            v{{ v.version_number }} · {{ v.location_display_name }} (/{{
+              v.location_slug
+            }})
           </span>
-          <span class="meta">Uploaded by {{ v.uploaded_by }}</span>
+
+          <span class="meta">Submitted by {{ v.uploaded_by }}</span>
         </div>
         <div class="actions">
           <button :disabled="actioningId === v.id" @click="approve(v.id)">

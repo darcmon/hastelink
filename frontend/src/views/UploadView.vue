@@ -16,10 +16,12 @@ const selectedFile = ref<File | null>(null);
 const dragging = ref(false);
 const error = ref('');
 const result = ref<{
-  original_filename: string;
+  label: string;
   version_number: number;
 } | null>(null);
 const uploading = ref(false);
+const submissionKind = ref<'file' | 'link'>('file');
+const linkUrl = ref('');
 
 async function loadLocations() {
   const data = await api.get('/admin/locations');
@@ -62,13 +64,49 @@ async function upload() {
   try {
     const formData = new FormData();
     formData.append('file', selectedFile.value);
-    result.value = await api.postForm(
+    const created = await api.postForm(
       `/admin/locations/${selectedSlug.value}/upload`,
       formData,
     );
+    if (!created) return;
+
+    result.value = {
+      label: created.original_filename,
+      version_number: created.version_number,
+    };
     selectedFile.value = null;
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Upload failed';
+  } finally {
+    uploading.value = false;
+  }
+}
+
+async function submitLink() {
+  const url = linkUrl.value.trim();
+  if (!url || !selectedSlug.value || uploading.value) return;
+
+  uploading.value = true;
+  error.value = '';
+  result.value = null;
+
+  try {
+    const created = await api.post(
+      `/admin/locations/${selectedSlug.value}/link`,
+      {
+        link_url: url,
+        link_mode: 'redirect',
+      },
+    );
+    if (!created) return;
+
+    result.value = {
+      label: created.link_url,
+      version_number: created.version_number,
+    };
+    linkUrl.value = '';
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Link submission failed';
   } finally {
     uploading.value = false;
   }
@@ -84,11 +122,11 @@ onMounted(loadLocations);
 
 <template>
   <div class="upload">
-    <h1>Upload File</h1>
+    <h1>Submit a Version</h1>
 
     <div class="field">
       <label>Location</label>
-      <select v-model="selectedSlug">
+      <select v-model="selectedSlug" :disabled="uploading">
         <option value="" disabled>Select a location…</option>
         <option v-for="loc in locations" :key="loc.slug" :value="loc.slug">
           {{ loc.display_name }} (/{{ loc.slug }})
@@ -96,8 +134,39 @@ onMounted(loadLocations);
       </select>
     </div>
 
+    <div class="field">
+      <label for="submission-kind">Version type</label>
+      <select
+        id="submission-kind"
+        v-model="submissionKind"
+        :disabled="uploading"
+      >
+        <option value="file">File</option>
+        <option value="link">Redirect link</option>
+      </select>
+    </div>
+
+    <div v-if="selectedSlug && submissionKind === 'link'" class="field">
+      <label for="link-url">Destination URL</label>
+      <input
+        id="link-url"
+        v-model="linkUrl"
+        type="url"
+        placeholder="https://example.com/handbook"
+        :disabled="uploading"
+      />
+      <small>The link will be checked and submitted for approval.</small>
+      <button
+        type="button"
+        :disabled="uploading || !linkUrl.trim()"
+        @click="submitLink"
+      >
+        {{ uploading ? 'Checking link…' : 'Submit link' }}
+      </button>
+    </div>
+
     <div
-      v-if="selectedSlug && !selectedFile"
+      v-if="submissionKind === 'file' && selectedSlug && !selectedFile"
       class="dropzone"
       :class="{ dragging }"
       @dragover.prevent="dragging = true"
@@ -116,7 +185,7 @@ onMounted(loadLocations);
       />
     </div>
 
-    <div v-if="selectedFile" class="preview">
+    <div v-if="submissionKind === 'file' && selectedFile" class="preview">
       <span>{{ selectedFile.name }} ({{ formatSize(selectedFile.size) }})</span>
       <button :disabled="uploading" @click="upload">
         {{ uploading ? 'Uploading…' : 'Upload' }}
@@ -127,8 +196,8 @@ onMounted(loadLocations);
     <p v-if="error" class="error">{{ error }}</p>
 
     <div v-if="result" class="success">
-      Uploaded {{ result.original_filename }} as v{{ result.version_number }} —
-      pending approval. Review it on the Dashboard.
+      Submitted {{ result.label }} as v{{ result.version_number }} — pending
+      approval. Review it on the Dashboard.
     </div>
   </div>
 </template>
