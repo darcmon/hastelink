@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import api from '../api/client';
+import api, { API_URL } from '../api/client';
 
 interface Location {
   id: string;
@@ -64,6 +64,10 @@ async function createLocation() {
   }
 }
 
+function publishedUrl(slug: string): string {
+  const base = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+  return `${base}/${encodeURIComponent(slug)}`;
+}
 onMounted(loadLocations);
 </script>
 
@@ -118,12 +122,22 @@ onMounted(loadLocations);
         <div class="status">
           <span :class="loc.current_approved_version_id ? 'serving' : 'empty'">
             {{
-              loc.current_approved_version_id ? 'Serving file' : 'No file yet'
+              loc.current_approved_version_id
+                ? 'Published'
+                : 'No published version yet'
             }}
           </span>
-          <router-link :to="`locations/${loc.slug}/archive`"
-            >Archive →</router-link
+          <a
+            v-if="loc.current_approved_version_id"
+            :href="publishedUrl(loc.slug)"
+            target="_blank"
+            rel="noopener noreferrer"
           >
+            Open published version ↗
+          </a>
+          <router-link :to="{ name: 'archive', params: { slug: loc.slug } }">
+            Archive →
+          </router-link>
         </div>
       </li>
     </ul>

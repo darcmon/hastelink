@@ -7,6 +7,7 @@ import LoginView from '../views/LoginView.vue';
 import AuthCallbackView from '../views/AuthCallbackView.vue';
 import DashboardView from '../views/DashboardView.vue';
 import LocationsView from '../views/LocationsView.vue';
+import ArchiveView from '../views/ArchiveView.vue';
 import UploadView from '../views/UploadView.vue';
 
 const routes: RouteRecordRaw[] = [
@@ -24,6 +25,12 @@ const routes: RouteRecordRaw[] = [
   },
   { path: '/dashboard', name: 'dashboard', component: DashboardView },
   { path: '/locations', name: 'locations', component: LocationsView },
+  {
+    path: '/locations/:slug/archive',
+    name: 'archive',
+    component: ArchiveView,
+    props: true,
+  },
   { path: '/upload', name: 'upload', component: UploadView },
   { path: '/', redirect: '/dashboard' },
 ];
