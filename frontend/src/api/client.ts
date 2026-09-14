@@ -1,6 +1,10 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-async function request(path: string, options: RequestInit = {}) {
+async function request(
+  path: string,
+  options: RequestInit = {},
+  responseType: 'json' | 'blob' = 'json',
+) {
   const token = localStorage.getItem('token');
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -47,13 +51,18 @@ async function request(path: string, options: RequestInit = {}) {
     throw new Error(message);
   }
 
-  // 204 No content has no body to parse
   if (response.status === 204) return null;
+
+  if (responseType === 'blob') {
+    return response.blob();
+  }
+
   return response.json();
 }
 
 export default {
   get: (path: string) => request(path),
+  download: (path: string) => request(path, {}, 'blob'),
   post: (path: string, body?: unknown) =>
     request(path, {
       method: 'POST',

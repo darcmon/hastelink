@@ -67,7 +67,7 @@ async def approve_version(
             notes=body.notes if body else None,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, details=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     await audit_service.log(
         db=db,
@@ -143,7 +143,7 @@ async def reject_version(
             notes=body.notes if body else None,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, details=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     location = await db.get(Location, version.location_id)
 
