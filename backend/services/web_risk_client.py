@@ -1,4 +1,7 @@
 import httpx
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class WebRiskError(Exception):
@@ -29,6 +32,27 @@ class WebRiskClient:
             response.raise_for_status()
         except httpx.TimeoutException as exc:
             raise WebRiskError("Web Risk request timed out") from exc
+        except httpx.HTTPStatusError as exc:
+            reason = "unknown"
+
+            try:
+                body = exc.response.json()
+                error = body.get("error", {})
+                for detail in error.get("details", []):
+                    if isinstance(detail, dict):
+                        candidate = detail.get("reason")
+                        if isinstance(candidate, str):
+                            reason = candidate
+                            break
+            except (ValueError, AttributeError, TypeError):
+                pass
+
+            logger.warning(
+                "Web Risk rejected request: status=%s reason=%s",
+                exc.response.status_code,
+                reason,
+            )
+            raise WebRiskError("Web Risk request failed") from None
         except httpx.HTTPError as exc:
             raise WebRiskError("Web Risk request failed") from exc
 

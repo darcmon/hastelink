@@ -19,6 +19,7 @@ from backend.middleware.security import SecurityHeaderMiddleware
 from backend.models import AdminUser
 
 logging.basicConfig(level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
