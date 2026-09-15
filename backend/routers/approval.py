@@ -50,44 +50,6 @@ async def list_pending(
     return results
 
 
-@router.post("/versions/{version_id}/review", response_model=ApprovalResponse)
-async def approve_version(
-    version_id: str,
-    request: Request,
-    body: ApprovalRequest | None = None,
-    db: AsyncSession = Depends(get_db),
-    admin: AdminUser = Depends(get_current_admin),
-):
-    """Approve a pending file version. It becomes the currently served file."""
-    try:
-        version, location = await approval_service.approve_version(
-            db=db,
-            version_id=version_id,
-            reviewed_by=admin.email,
-            notes=body.notes if body else None,
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
-
-    await audit_service.log(
-        db=db,
-        version_id=version.id,
-        actor=admin.email,
-        action="approve",
-        request=request,
-        details={"location_slug": location.slug, "notes": body.notes if body else None},
-    )
-
-    return ApprovalResponse(
-        id=version.id,
-        status=version.status,
-        reviewed_by=admin.email,
-        reviewed_at=version.reviewed_at,
-        location_slug=location.slug,
-        now_serving=True,
-    )
-
-
 @router.post("/versions/{version_id}/approve", response_model=ApprovalResponse)
 async def approve_version(
     version_id: str,
