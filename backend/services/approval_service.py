@@ -20,16 +20,25 @@ class ApprovalService:
     ) -> tuple[FileVersion, Location]:
         version = await db.get(FileVersion, version_id)
 
-        if not version:
+        if version is None:
             raise ValueError("Version not found")
+
+        location_result = await db.execute(
+            select(Location)
+            .where(Location.id == version.location_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        location = location_result.scalar_one_or_none()
+        if location is None:
+            raise ValueError("Location not found")
+
+        await db.refresh(version)
+
         if version.status != "pending":
             raise ValueError(f"Cannot approve version with status '{version.status}'")
         if version.deleted_at is not None:
             raise ValueError("Cannot approve a deleted version")
-
-        location = await db.get(Location, version.location_id)
-        if not location:
-            raise ValueError("Location not found")
 
         await db.execute(
             update(FileVersion)
@@ -62,10 +71,23 @@ class ApprovalService:
         notes: str | None = None,
     ) -> FileVersion:
         version = await db.get(FileVersion, version_id)
-        if not version:
+        if version is None:
             raise ValueError("Version not found")
+
+        location_result = await db.execute(
+            select(Location.id)
+            .where(Location.id == version.location_id)
+            .with_for_update()
+        )
+        if location_result.scalar_one_or_none() is None:
+            raise ValueError("Location not found")
+
+        await db.refresh(version)
+
         if version.status != "pending":
             raise ValueError(f"Cannot reject version with status '{version.status}'")
+        if version.deleted_at is not None:
+            raise ValueError("Cannot reject a deleted version")
 
         version.status = "rejected"
         version.reviewed_by = reviewed_by

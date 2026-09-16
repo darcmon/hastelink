@@ -43,7 +43,13 @@ async def test_approving_link_clears_old_cached_destination(monkeypatch):
     monkeypatch.setattr(approval_module, "cache_service", cache)
 
     db = MagicMock(spec=AsyncSession)
-    db.get.side_effect = [version, location]
+    db.get.return_value = version
+
+    location_result = MagicMock()
+    location_result.scalar_one_or_none.return_value = location
+
+    update_result = MagicMock()
+    db.execute.side_effect = [location_result, update_result]
 
     service = approval_module.ApprovalService()
     approved, updated_location = await service.approve_version(
@@ -58,3 +64,4 @@ async def test_approving_link_clears_old_cached_destination(monkeypatch):
     assert updated_location.current_approved_version_id == version.id
     assert cache.get("handbook") is None
     db.flush.assert_awaited_once()
+    db.refresh.assert_awaited_once_with(version)
