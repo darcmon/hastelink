@@ -86,13 +86,22 @@ class ApprovalService:
         )
         return list(result.scalars().all())
 
-    async def get_next_version_number(self, db: AsyncSession, location_id: UUID) -> int:
+    async def get_next_version_number(
+        self,
+        db: AsyncSession,
+        location_id: UUID,
+    ) -> int:
+        location_result = await db.execute(
+            select(Location.id).where(Location.id == location_id).with_for_update()
+        )
+        location_result.scalar_one()
+
         result = await db.execute(
             select(func.coalesce(func.max(FileVersion.version_number), 0) + 1).where(
                 FileVersion.location_id == location_id
             )
         )
-        return result.scalar()
+        return result.scalar_one()
 
     async def create_pending_version(
         self,

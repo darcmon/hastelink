@@ -10,13 +10,17 @@ from backend.services.approval_service import ApprovalService
 @pytest.mark.asyncio
 async def test_creates_pending_link_version():
     db = MagicMock(spec=AsyncSession)
+    location_id = uuid4()
 
-    query_result = MagicMock()
-    query_result.scalar.return_value = 3
-    db.execute.return_value = query_result
+    location_result = MagicMock()
+    location_result.scalar_one.return_value = location_id
+
+    number_result = MagicMock()
+    number_result.scalar_one.return_value = 3
+
+    db.execute.side_effect = [location_result, number_result]
 
     service = ApprovalService()
-    location_id = uuid4()
 
     version = await service.create_pending_link_version(
         db=db,
