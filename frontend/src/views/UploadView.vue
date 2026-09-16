@@ -57,7 +57,7 @@ function onFileInput(e: Event) {
 }
 
 async function upload() {
-  if (!selectedFile.value || !selectedSlug.value) return;
+  if (!selectedFile.value || !selectedSlug.value || uploading.value) return;
   uploading.value = true;
   error.value = '';
   result.value = null;
@@ -190,7 +190,7 @@ onMounted(loadLocations);
       <button :disabled="uploading" @click="upload">
         {{ uploading ? 'Uploading…' : 'Upload' }}
       </button>
-      <button @click="selectedFile = null">Remove</button>
+      <button :disabled="uploading" @click="selectedFile = null">Remove</button>
     </div>
 
     <p v-if="error" class="error">{{ error }}</p>
