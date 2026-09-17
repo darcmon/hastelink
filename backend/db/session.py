@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from backend.db.base import Base
-
 from backend.config import get_settings
+from backend.services.cache_service import cache_service
 
 engine = create_async_engine(
     get_settings().database_url,
@@ -26,8 +26,13 @@ async def get_db() -> AsyncSession:
         try:
             yield session
             await session.commit()
+
+            slugs = session.info.pop("cache_invalidation_slugs", set())
+            for slug in slugs:
+                cache_service.invalidate(slug)
         except Exception:
             await session.rollback()
+            session.info.pop("cache_invalidation_slugs", None)
             raise
         finally:
             await session.close()

@@ -6,11 +6,10 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.services import approval_service as approval_module
-from backend.services.cache_service import CacheService
 
 
 @pytest.mark.asyncio
-async def test_approving_link_clears_old_cached_destination(monkeypatch):
+async def test_approving_link_schedules_cache_invalidation():
     location_id = uuid4()
     old_version_id = uuid4()
 
@@ -27,22 +26,8 @@ async def test_approving_link_clears_old_cached_destination(monkeypatch):
         deleted_at=None,
     )
 
-    cache = CacheService()
-    cache._ttl = 60
-    cache.set(
-        slug="handbook",
-        version_id=old_version_id,
-        s3_key=None,
-        content_type=None,
-        original_filename=None,
-        kind="link",
-        link_url="https://example.com/old",
-        link_mode="redirect",
-    )
-    assert cache.get("handbook") is not None
-    monkeypatch.setattr(approval_module, "cache_service", cache)
-
     db = MagicMock(spec=AsyncSession)
+    db.info = {}
     db.get.return_value = version
 
     location_result = MagicMock()
@@ -62,6 +47,7 @@ async def test_approving_link_clears_old_cached_destination(monkeypatch):
     assert approved.reviewed_by == "admin@example.com"
     assert approved.reviewed_at is not None
     assert updated_location.current_approved_version_id == version.id
-    assert cache.get("handbook") is None
+    assert db.info["cache_invalidation_slugs"] == {"handbook"}
+    db.commit.assert_not_awaited()
     db.flush.assert_awaited_once()
     db.refresh.assert_awaited_once_with(version)

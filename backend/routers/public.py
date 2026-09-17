@@ -23,6 +23,8 @@ async def serve_file(
     cached = cache_service.get(slug)
 
     if not cached:
+        generation = cache_service.get_generation()
+
         # 1. Find location by the slug
         result = await db.execute(
             select(Location).where(Location.slug == slug, Location.deleted_at.is_(None))
@@ -40,8 +42,7 @@ async def serve_file(
         ):
             raise HTTPException(status_code=404, detail="Version not found")
 
-        # Populate cache for next request
-        cache_service.set(
+        cached = cache_service.set(
             slug=slug,
             kind=version.kind,
             link_url=version.link_url,
@@ -50,8 +51,8 @@ async def serve_file(
             s3_key=version.s3_key,
             content_type=version.content_type,
             original_filename=version.original_filename,
+            expected_generation=generation,
         )
-        cached = cache_service.get(slug)
 
     # 3. Log the access
     await audit_service.log(

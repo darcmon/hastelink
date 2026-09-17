@@ -27,6 +27,10 @@ class CacheService:
     def __init__(self):
         self._cache: dict[str, CachedVersion] = {}
         self._ttl = get_settings().cache_ttl_seconds
+        self._generation = 0
+
+    def get_generation(self) -> int:
+        return self._generation
 
     def get(self, slug: str) -> CachedVersion | None:
         entry = self._cache.get(slug)
@@ -46,8 +50,9 @@ class CacheService:
         kind: Literal["file", "link"] = "file",
         link_url: str | None = None,
         link_mode: Literal["redirect"] | None = None,
-    ) -> None:
-        self._cache[slug] = CachedVersion(
+        expected_generation: int | None = None,
+    ) -> CachedVersion:
+        entry = CachedVersion(
             version_id=version_id,
             s3_key=s3_key,
             content_type=content_type,
@@ -58,7 +63,13 @@ class CacheService:
             link_mode=link_mode,
         )
 
+        if expected_generation is None or expected_generation == self._generation:
+            self._cache[slug] = entry
+
+        return entry
+
     def invalidate(self, slug: str) -> None:
+        self._generation += 1
         self._cache.pop(slug, None)
 
 

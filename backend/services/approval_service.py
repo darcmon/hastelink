@@ -7,19 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.models.location import Location
 from backend.models.file_version import FileVersion
 
-from backend.services.cache_service import cache_service
-
 
 class ApprovalService:
-    async def approve_version(
+    async def _get_version_for_review(
         self,
         db: AsyncSession,
         version_id: UUID,
-        reviewed_by: str,
-        notes: str | None = None,
     ) -> tuple[FileVersion, Location]:
         version = await db.get(FileVersion, version_id)
-
         if version is None:
             raise ValueError("Version not found")
 
@@ -34,6 +29,16 @@ class ApprovalService:
             raise ValueError("Location not found")
 
         await db.refresh(version)
+        return version, location
+
+    async def approve_version(
+        self,
+        db: AsyncSession,
+        version_id: UUID,
+        reviewed_by: str,
+        notes: str | None = None,
+    ) -> tuple[FileVersion, Location]:
+        version, location = await self._get_version_for_review(db, version_id)
 
         if version.status != "pending":
             raise ValueError(f"Cannot approve version with status '{version.status}'")
@@ -60,7 +65,7 @@ class ApprovalService:
         location.updated_at = now
 
         await db.flush()
-        cache_service.invalidate(location.slug)
+        db.info.setdefault("cache_invalidation_slugs", set()).add(location.slug)
         return version, location
 
     async def reject_version(
@@ -70,19 +75,7 @@ class ApprovalService:
         reviewed_by: str,
         notes: str | None = None,
     ) -> FileVersion:
-        version = await db.get(FileVersion, version_id)
-        if version is None:
-            raise ValueError("Version not found")
-
-        location_result = await db.execute(
-            select(Location.id)
-            .where(Location.id == version.location_id)
-            .with_for_update()
-        )
-        if location_result.scalar_one_or_none() is None:
-            raise ValueError("Location not found")
-
-        await db.refresh(version)
+        version, _location = await self._get_version_for_review(db, version_id)
 
         if version.status != "pending":
             raise ValueError(f"Cannot reject version with status '{version.status}'")

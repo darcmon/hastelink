@@ -181,3 +181,58 @@ async def test_approved_file_still_streams(monkeypatch):
     )
     assert "location" not in response.headers
     audit_log.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_invalidation_during_read_prevents_stale_cache(monkeypatch):
+    version = SimpleNamespace(
+        id=uuid4(),
+        kind="link",
+        status="approved",
+        deleted_at=None,
+        link_url="https://example.com/old",
+        link_mode="redirect",
+        s3_key=None,
+        content_type=None,
+        original_filename=None,
+    )
+    location = SimpleNamespace(
+        current_approved_version_id=version.id,
+    )
+
+    cache = CacheService()
+    cache._ttl = 60
+    monkeypatch.setattr(public, "cache_service", cache)
+
+    db = MagicMock(spec=AsyncSession)
+    query_result = MagicMock()
+    query_result.scalar_one_or_none.return_value = location
+
+    async def read_location(*args, **kwargs):
+        # Simulate an approval clearing the cache during this read.
+        cache.invalidate("handbook")
+        return query_result
+
+    db.execute.side_effect = read_location
+    db.get.return_value = version
+
+    audit_log = AsyncMock()
+    monkeypatch.setattr(public.audit_service, "log", audit_log)
+
+    app = FastAPI()
+    app.include_router(public.router)
+    app.dependency_overrides[get_db] = lambda: db
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(
+        transport=transport,
+        base_url="http://test",
+        follow_redirects=False,
+    ) as client:
+        response = await client.get("/handbook")
+
+    assert response.status_code == 302
+    assert response.headers["location"] == version.link_url
+    assert cache.get("handbook") is None
+    db.execute.assert_awaited_once()
+    audit_log.assert_awaited_once()
