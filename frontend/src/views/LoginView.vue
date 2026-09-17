@@ -5,7 +5,7 @@ const error = new URLSearchParams(window.location.search).get('error');
 
 <template>
   <div class="login-page">
-    <h1>Hastelink</h1>
+    <h1>klinkrr</h1>
 
     <p v-if="error === 'unauthorized'" class="error">
       Your account isn't authorized. Contact your administrator.

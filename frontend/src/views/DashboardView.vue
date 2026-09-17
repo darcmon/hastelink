@@ -2,22 +2,8 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
+import type { PendingVersion } from '../types/version';
 import api from '../api/client';
-
-interface PendingVersion {
-  id: string;
-  location_slug: string;
-  location_display_name: string;
-  kind: 'file' | 'link';
-  link_url: string | null;
-  link_mode: 'redirect' | null;
-  original_filename: string | null;
-  content_type: string | null;
-  file_size_bytes: number | null;
-  version_number: number;
-  uploaded_by: string;
-  uploaded_at: string;
-}
 
 const router = useRouter();
 const { logout } = useAuth();

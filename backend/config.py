@@ -11,12 +11,12 @@ class Settings(BaseSettings):
 
     # db
     database_url: str = (
-        "postgresql+asyncpg://hastelink:localdev@localhost:5432/haste_link"
+        "postgresql+asyncpg://klinkrr:localdev@localhost:5432/klinkrr"
     )
 
     # S3 / MinIO
     s3_endpoint_url: str | None = None
-    s3_bucket: str = "haste-link"
+    s3_bucket: str = "klinkrr"
     aws_access_key_id: str = ""
     aws_secret_access_key: str = ""
     aws_region: str = "us-east-1"

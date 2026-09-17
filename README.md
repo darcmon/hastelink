@@ -1,6 +1,6 @@
-# Hastelink
+# klinkrr
 
-Hastelink is a versioned file-publishing app for stable, human-readable links. Administrators create a location such as `/employee-handbook`, upload a replacement file, and approve it before it becomes public. The URL stays the same while the file behind it changes.
+klinkrr is a versioned file-publishing app for stable, human-readable links. Administrators create a location such as `/employee-handbook`, upload a replacement file, and approve it before it becomes public. The URL stays the same while the file behind it changes.
 
 ## What it does
 

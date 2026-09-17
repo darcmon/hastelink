@@ -4,9 +4,9 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_USER: hastelink
+      POSTGRES_USER: klinkrr
       POSTGRES_PASSWORD: localdev
-      POSTGRES_DB: haste_link
+      POSTGRES_DB: klinkrr
     ports:
       - '5432:5432'
     volumes:

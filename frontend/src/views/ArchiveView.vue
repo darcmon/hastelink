@@ -1,27 +1,11 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import type { ArchivedVersion, ArchiveResponse } from '../types/version';
 import api from '../api/client';
 
 const props = defineProps<{
   slug: string;
 }>();
-
-interface Version {
-  id: string;
-  kind: 'file' | 'link';
-  link_url: string | null;
-  original_filename: string | null;
-  version_number: number;
-  status: string;
-  uploaded_by: string;
-  uploaded_at: string;
-}
-
-interface ArchiveResponse {
-  location_display_name: string;
-  versions: Version[];
-  total: number;
-}
 
 const archive = ref<ArchiveResponse | null>(null);
 const downloadingId = ref<string | null>(null);
@@ -36,7 +20,7 @@ function formatDate(value: string): string {
   return new Date(value).toLocaleString();
 }
 
-async function downloadVersion(version: Version) {
+async function downloadVersion(version: ArchivedVersion) {
   if (version.kind !== 'file' || downloadingId.value !== null) return;
 
   downloadingId.value = version.id;
